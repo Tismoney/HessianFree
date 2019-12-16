@@ -1,0 +1,13 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: mlp
+    layers_size: [784, 512, 256, 64, 10]
+    num_epochs: 5
+
+optimizer:
+    name: SGD
+    lr: 0.1
+    weight_decay: 0.0001
