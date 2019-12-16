@@ -26,10 +26,11 @@ def make_mlp(layers_size):
 class MLP(nn.Module):
     def __init__(self, layers_size = [3 * 32 * 32, 1024, 512, 512, 10]):
         super(MLP, self).__init__()
+        self.in_features = layers_size[0]
         self.net = make_mlp(layers_size)
 
     def forward(self, x):
-        x = x.view(-1, 3 * 32*32)
-        x = x.net(x)
+        x = x.view(x.size(0), self.in_features)
+        x = self.net(x)
         return x
 
