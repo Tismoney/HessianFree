@@ -47,13 +47,13 @@ class Newton(Optimizer):
         grads.append(param.grad.view(-1))
     grads = torch.cat(grads)
     hessian = self.eval_hessian(grads, params)
-    updatae = hessian.inverse() @ grads
+    updatae = hessian.pinverse() @ grads
     with torch.no_grad():
         prev_size = 0
         for i, param in enumerate(params):
-            size = param.size()
+            size = param.shape
             len_ = param.view(-1).size(0)
-            params[i] -= updatae[prev_size: len_].reshape(size)
+            params[i] -= updatae[prev_size: prev_size + len_].reshape(size)
             prev_size += len_
     predictions = model_predict()   
     loss = loss_func(predictions)
@@ -62,6 +62,6 @@ class Newton(Optimizer):
 
 
 def get_newton(params, config):
-    sgd_params = ['lr'] 
-    sgd_params = {p: config[p] for p in sgd_params if p in config}
-    return Newton(params, **sgd_params)
+    newton_params = ['lr'] 
+    newton_params = {p: config[p] for p in newton_params if p in config}
+    return Newton(params, **newton_params)
