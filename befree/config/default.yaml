@@ -1,0 +1,11 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: resnet18
+
+optimizer:
+    name: SGD
+    lr: 0.1
+    weight_decay: 0.00001
