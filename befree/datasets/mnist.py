@@ -4,7 +4,7 @@ from torchvision import datasets, transforms
 
 
 def get_mnist(config):
-    batch_size = config.batch_size
+    batch_size = config['batch_size']
 
     transform = transforms.Compose(
         [transforms.ToTensor()])
