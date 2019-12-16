@@ -1,6 +1,6 @@
 from .basic_optim import *
-
-optimizer_name = ['Adam', 'SGD', 'Momentum']
+from .newton_optim import *
+optimizer_name = ['Adam', 'SGD', 'Momentum', 'Newton']
 
 def get_optimizer(params, config):
     
@@ -12,5 +12,7 @@ def get_optimizer(params, config):
         return get_sgd(params, config)
     elif config['name'] == 'Momentum':
         return get_momentum(params, config)
+    elif config['name'] == 'Newton':
+        return get_newton(params, config)
     
     
