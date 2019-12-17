@@ -1,0 +1,13 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    layers_size: [100, 10]
+    name: mlp
+
+optimizer:
+    name: Curveball
+    lr: 0.1
+    momentum: 0.1
+    lambd: 0.1
