@@ -1,4 +1,4 @@
-from torch.optim import Adam, SGD
+from torch.optim import Adam, SGD, LBFGS
 
 def get_adam(params, config):
     adam_params = ['lr', 'betas', 'eps', 'weight_decay']
@@ -17,3 +17,8 @@ def get_sgd(params, config):
     sgd_params = ['lr', 'weight_decay'] #momentum is always 0
     sgd_params = {p: config[p] for p in sgd_params if p in config}
     return SGD(params, **sgd_params)
+
+def get_lbfgs(params, config):
+    lbfgs_params = ['lr', 'max_iter', 'max_eval', 'tolerance_grad', 'tolerance_change', 'history_size']
+    lbfgs_params = {p: config[p] for p in lbfgs_params if p in config}
+    return LBFGS(params, **lbfgs_params)

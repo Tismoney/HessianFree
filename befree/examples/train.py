@@ -1,5 +1,6 @@
 import torch
 from torch.nn import functional as F
+from ..optimizers.basic_optim import LBFGS
 
 ## Will be deleted in the future
 class CustomOptimizer: 
@@ -15,6 +16,16 @@ def train(model, train_loader, optimizer, epoch):
 
             if isinstance(optimizer, CustomOptimizer):
                 (loss, predictions) = optimizer.step(model_fn, loss_fn)
+            elif isinstance(optimizer, LBFGS):
+                def closure():
+                    optimizer.zero_grad()
+                    predictions = model(input)
+                    loss = F.cross_entropy(predictions, output)
+                    loss.backward()
+                    return loss
+                loss = optimizer.step(closure)
+                with torch.no_grad(): 
+                    predictions = model(input)
             else:
                 # standard optimizer
                 optimizer.zero_grad()
