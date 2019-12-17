@@ -12,7 +12,7 @@ class CurveBall(Optimizer):
 
 
   def fmad(self, predictions, parameters, zs):
-    v = torch.zeros_like(predictions, requires_grad=True)
+    v = torch.ones_like(predictions, requires_grad=True)
     g = torch.autograd.grad(predictions, parameters, grad_outputs=v, create_graph=True)
     output = torch.autograd.grad(g, v, grad_outputs=zs)
     return output
@@ -35,26 +35,20 @@ class CurveBall(Optimizer):
     
     predictions = model_predict()
     loss = loss_func(predictions)
-    # linear list of state tensors z
+    
     zs = [state[p]['z'] for p in params]
     (Jz,) = self.fmad(predictions,  params, zs)
+
     (Jl,) = grad(loss, predictions, create_graph=True)
     Jl_d = Jl.detach()
-    (Hl_Jz,) =grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
-    # print(grad(Jl, predictions, grad_outputs=torch.ones_like(Jz), retain_graph=True))
-    # print(Hl_Jz)
-
-    # compute J * (Hl_Jz + Jl) using RMAD (back-propagation).
-    # note this is still missing the lambda * z term.
-
-    delta_zs = grad(predictions, params, Hl_Jz + Jl_d, retain_graph=True)
-    # print(delta_zs)
-    for (z, dz) in zip(zs, delta_zs):
-      dz.data.add_(lambd, z)
-      
-    for (p, z, dz) in zip(params, zs, delta_zs):
-      z.data.mul_(momentum).add_(-lr, dz)  # update state
-      p.data.add_(z)  # update parameter
+    (Hl_Jz,) = grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
+    delta_zs = grad(predictions, params, grad_outputs=( Hl_Jz + Jl_d), retain_graph=True)    
+    with torch.no_grad():
+        for (z, dz) in zip(zs, delta_zs):
+            dz.data.add_(lambd, z)
+        for (p, z, dz) in zip(params, zs, delta_zs):
+            z.data.add_(-lr, dz)  # update state
+            p.data.add_(z)  # update parameter
 
     predictions = model_predict()
     loss = loss_func(predictions)
