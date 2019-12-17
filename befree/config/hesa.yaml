@@ -8,6 +8,6 @@ model:
 
 optimizer:
     name: Curveball
-    lr: 0.1
-    momentum: 0.1
-    lambd: 0.1
+    lr: 0.001
+    momentum: 0.5
+    lambd: 0.01
