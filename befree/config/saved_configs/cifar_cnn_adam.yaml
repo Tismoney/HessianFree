@@ -1,18 +1,18 @@
 dataset:
-    name: mnist
+    name: cifar10
     batch_size: 128
 
 model:
-    name: mlp
-    fc: [784, 800, 10]
+    name: cnn
+    cnn: [32, M , 32, A, 64, A]
+    fc: [1024, 64, 10]
     num_epochs: 5
 
 optimizer:
     num_epochs: 3
-    name: LBFGS
+    name: Adam
     lr: 0.001
-    history_size: 10
-    max_iter: 5
+    # weight_decay: 0.00001
 
 loss:
     name: CrossEntropy
