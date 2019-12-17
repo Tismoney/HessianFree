@@ -39,16 +39,24 @@ class SimplifiedHessian(Optimizer):
 
         (Jl,) = grad(loss, predictions, create_graph=True)
         Jl_d = Jl.detach()
+        z0 = -Jl
 
-        (Hl_Jz,) = grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
-        delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)
+        # (Hl) = grad(Jl, predictions, retain_graph=True)
+        # delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)
         R = 10
-        for i in range(R):
-            (Jz,) = self.fmad(predictions, params, zs)
-            (Hl_Jz,) = grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
+        def A_bmm(x):
+            (Hl, ) = grad(Jl, predictions, grad_outputs=x[0,0], retain_graph=True)
+            return Hl.unsqueeze(0).unsqueeze(0)
 
+        for i in range(R):
+            # (Jz,) = self.fmad(predictions, params, z0)
+            print(Jl)
+            cg = CG(A_bmm)
+            z0 = cg(Jl.unsqueeze(0).unsqueeze(0))
+        print(z0)
+        z0 = z0[0,0]
         with torch.no_grad():
-            for (p, z, dz) in zip(params, zs, delta_zs):
+            for (p, z) in zip(params, z0):
                 p.data.add_(z)  # update parameter
 
         predictions = model_predict()
