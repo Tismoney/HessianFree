@@ -10,8 +10,8 @@ model:
 optimizer:
     num_epochs: 3
     name: CurveBall
-    lr: 0.01
-    momentum: 0.99
+    lr: 0.1
+    momentum: 0.9
 
 loss:
     name: CrossEntropy
