@@ -20,5 +20,5 @@ def get_sgd(params, config):
 
 def get_lbfgs(params, config):
     lbfgs_params = ['lr', 'max_iter', 'max_eval', 'tolerance_grad', 'tolerance_change', 'history_size']
-    lbfgs_params = {p: config[p] for p in lbfgs_params if ps in config}
+    lbfgs_params = {p: config[p] for p in lbfgs_params if p in config}
     return LBFGS(params, **lbfgs_params)
