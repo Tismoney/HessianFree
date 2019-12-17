@@ -1,12 +1,9 @@
 import torch
 from torch.nn import functional as F
-from ..optimizers.basic_optim import LBFGS
+from ..optimizers import LBFGS, CurveBall
 import numpy as np
 from time import time
 
-## Will be deleted in the future
-class CustomOptimizer: 
-    None
 
 def train(model, train_loader, optimizer, criterion, metrics, epoch):
     '''
@@ -26,9 +23,10 @@ def train(model, train_loader, optimizer, criterion, metrics, epoch):
             if torch.cuda.is_available():           
                 inputs, targets = inputs.cuda(), targets.cuda()
             # inputs.requires_grad = True
-
-            if isinstance(optimizer, CustomOptimizer):
-                (loss, predictions) = optimizer.step(model, criterion)
+            if isinstance(optimizer, CurveBall):
+                model_fn = lambda: model(inputs)
+                loss_fn = lambda predictions: criterion(predictions, targets)
+                loss, predictions = optimizer.step(model_fn, loss_fn)
             elif isinstance(optimizer, LBFGS):
                 def closure():
                     if torch.is_grad_enabled():

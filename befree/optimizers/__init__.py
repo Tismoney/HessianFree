@@ -1,7 +1,9 @@
 from .basic_optim import *
 from .newton_optim import *
+from .curveball_optim import *
 
-optimizer_name = ['Adam', 'SGD', 'Momentum', 'Newton', 'LBFGS']
+optimizer_name = ['Adam', 'SGD', 'Momentum',
+                  'Newton', 'LBFGS', 'CurveBall']
 
 def get_optimizer(params, config):
     
@@ -17,5 +19,7 @@ def get_optimizer(params, config):
         return get_newton(params, config)
     elif config['name'] == 'LBFGS':
         return get_lbfgs(params, config)
+    elif config['name'] == 'CurveBall':
+        return get_curve_ball(params, config)
     
     

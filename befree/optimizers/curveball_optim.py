@@ -5,11 +5,9 @@ import numpy as np
 
 class CurveBall(Optimizer):
 
-
-  def __init__(self, params, lr=None, momentum=None, lambd=10.0):
+  def __init__(self, params, lr=None, momentum=None, lambd=1.0):
       defaults = dict(lr=lr, momentum=momentum, lambd=lambd)
       super().__init__(params, defaults)
-
 
   def fmad(self, predictions, parameters, zs):
     v = torch.ones_like(predictions, requires_grad=True)
@@ -53,7 +51,7 @@ class CurveBall(Optimizer):
 
     predictions = model_predict()
     loss = loss_func(predictions)
-    return loss.item()
+    return loss, predictions
 
 
 
