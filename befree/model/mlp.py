@@ -17,8 +17,9 @@ def make_mlp(layers_size):
         layers.append((f'fc{i}', nn.Linear(in_features, out_features)))
         if i != last_layers:
             layers.append((f'relu{i}', nn.ReLU()))
-        else:
-            layers.append((f'softmax{i}', nn.Softmax(dim=1)))
+            # layers.append((f'drop{i}', nn.Dropout(0.2)))
+        # else:
+        #     layers.append((f'softmax{i}', nn.Softmax(dim=1)))
 
     return nn.Sequential(OrderedDict(layers))
 

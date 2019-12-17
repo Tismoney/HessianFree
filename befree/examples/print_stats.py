@@ -1,26 +1,29 @@
 import numpy as np
 from matplotlib import pyplot as plt
-
+from itertools import chain
 
 def print_stats(named_stats, step = 25, figsize=(16, 4)):
-    _, ax = plt.subplots(1, 2, figsize=figsize)
-    
-    for name, stats in named_stats.items():
-        stats = np.array(stats)
-        num_iter = stats.shape[0]
-        
-        x = np.arange(0, num_iter, step)
-        avg_loss = [stats.T[0][i:i+step].mean() for i in x]
-        avg_acc = [stats.T[1][i:i+step].mean() for i in x]
 
+    stat_names = list(set(chain(*[set(st.keys()) for st in named_stats.values()])))
+    assert len(stat_names) >= 1
+    _, ax = plt.subplots(1, len(stat_names), figsize=figsize)
+    if len(stat_names) == 1:
+        ax = [ax]
+
+    for name, stats in named_stats.items():
         
-        ax[0].plot(x, avg_loss, label=name)
-        ax[1].plot(x, avg_acc, label=name)
+        for i, st_name in enumerate(stat_names):
+            if st_name in stats:
+                _stats = np.array(stats[st_name])
+                num_iter = len(_stats)
         
-    ax[0].set_title('Loss')
-    ax[1].set_title('Accuracy')
-    ax[0].legend()
-    ax[1].legend()
-    ax[0].grid()
-    ax[1].grid()
+                x = np.arange(0, num_iter, step)
+                avg_stat = [_stats[i:i+step].mean() for i in x]
+                ax[i].plot(x, avg_stat, label=name)
+    
+    for i, st_name in enumerate(stat_names):
+        ax[i].set_title(st_name)
+        ax[i].legend()
+        ax[i].grid()
+
     plt.show()

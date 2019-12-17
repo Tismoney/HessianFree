@@ -1,43 +1,62 @@
 import torch
 from torch.nn import functional as F
 from ..optimizers.basic_optim import LBFGS
+import numpy as np
+from time import time
 
 ## Will be deleted in the future
 class CustomOptimizer: 
     None
 
-def train(model, train_loader, optimizer, epoch):
+def train(model, train_loader, optimizer, criterion, metrics, epoch):
+    '''
+        Params:
+            model: pytorch model
+            train_loader: train dataset
+            optimizer: torch.optim.Optimizer
+            criterion: loss function
+            metrics: dict of functions
+            epoch: int, num of epoch
+    '''
     model.train()
-    stats = []
+    stats = {key: [] for key in ['loss'] + list(metrics.keys())}
     for epoch_i in range(1, epoch + 1):
-        for batch_idx, (input, output) in enumerate(train_loader):
+        start = time()
+        for batch_idx, (inputs, targets) in enumerate(train_loader):
             if torch.cuda.is_available():           
-                input, output = input.cuda(), output.cuda()
+                inputs, targets = inputs.cuda(), targets.cuda()
+            # inputs.requires_grad = True
 
             if isinstance(optimizer, CustomOptimizer):
-                (loss, predictions) = optimizer.step(model_fn, loss_fn)
+                (loss, predictions) = optimizer.step(model, criterion)
             elif isinstance(optimizer, LBFGS):
                 def closure():
-                    optimizer.zero_grad()
-                    predictions = model(input)
-                    loss = F.cross_entropy(predictions, output)
-                    loss.backward()
+                    if torch.is_grad_enabled():
+                        optimizer.zero_grad()
+                    predictions = model(inputs)
+                    loss = criterion(predictions, targets)
+                    if loss.requires_grad:
+                        loss.backward()
                     return loss
                 loss = optimizer.step(closure)
-                with torch.no_grad(): 
-                    predictions = model(input)
-            else:
-                # standard optimizer
+                predictions = model(inputs)
+            else: # standard optimizer
                 optimizer.zero_grad()
-                predictions = model(input)
-                loss = F.cross_entropy(predictions, output)
+                predictions = model(inputs)
+                loss = criterion(predictions, targets)
                 loss.backward()
                 optimizer.step()
 
-            predictions = predictions.max(1, keepdim=True)[1]  # get the index of the max log-probability
-            acc = predictions.eq(output.view_as(predictions)).double().mean()
+            stats['loss'].append(loss.item())
+            with torch.no_grad(): 
+                for name, func in metrics.items():
+                    res = func(predictions, targets)
+                    stats[name].append(res.item())
 
-            stats.append([loss.item(), acc.item()])
-        
-        print(f'[{epoch_i}/{epoch}] epoch: Loss: {stats[-1][0]:.3f}  Accuracy:{stats[-1][1]:.3f}')
+        print_stat = f"[{epoch_i}/{epoch}] epoch | Loss: {np.mean(stats['loss'][-25]):.3f} | "
+        for name in metrics.keys():
+            print_stat += f"{name} : {np.mean(stats[name][-25:]):.3f} | "
+        end = time()
+        print_stat += f"time: {end - start:.2f}s"
+        print(print_stat)
     return stats
