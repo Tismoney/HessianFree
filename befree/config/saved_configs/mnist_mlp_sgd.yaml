@@ -4,7 +4,7 @@ dataset:
 
 model:
     name: mlp
-    layers_size: [784, 800, 10]
+    fc: [784, 800, 10]
     num_epochs: 5
 
 optimizer:
