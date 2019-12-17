@@ -57,6 +57,6 @@ def train(model, train_loader, optimizer, criterion, metrics, epoch):
         for name in metrics.keys():
             print_stat += f"{name} : {np.mean(stats[name][-25:]):.3f} | "
         end = time()
-        print_stat += f" time: {end - start:.2f}s"
+        print_stat += f"time: {end - start:.2f}s"
         print(print_stat)
     return stats
