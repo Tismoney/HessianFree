@@ -9,9 +9,9 @@ model:
 
 optimizer:
     num_epochs: 3
-    name: Adam
-    lr: 0.001
-    # weight_decay: 0.00001
+    name: CurveBall
+    lr: 0.01
+    momentum: 0.99
 
 loss:
     name: CrossEntropy
