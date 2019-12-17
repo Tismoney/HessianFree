@@ -1,7 +1,6 @@
 from .basic_models import *
-from .mlp import get_mlp
 
-models_name = ['resnet18', 'vgg16', 'mlp']
+models_name = ['resnet18', 'vgg16', 'mlp', 'cnn']
 
 def get_model(config):
     
@@ -13,6 +12,8 @@ def get_model(config):
         return get_vgg16(config)
     elif config['name'] == 'mlp':
         return get_mlp(config)
+    elif config['name'] == 'cnn':
+        return get_cnn(config)
 
     
     
