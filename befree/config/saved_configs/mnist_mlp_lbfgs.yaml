@@ -1,0 +1,21 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: mlp
+    layers_size: [784, 800, 10]
+    num_epochs: 5
+
+optimizer:
+    num_epochs: 2
+    name: LBFGS
+    lr: 0.01
+    history_size: 10
+    max_iter: 5
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]
