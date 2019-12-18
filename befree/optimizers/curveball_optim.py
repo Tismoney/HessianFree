@@ -40,14 +40,41 @@ class CurveBall(Optimizer):
     Jl_d = Jl.detach()
     (Hl_Jz,) = grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
     delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)    
-    
-    with torch.no_grad():
-        for (z, dz) in zip(zs, delta_zs):
-            dz.data.add_(lambd, z)
 
-        for (p, z, dz) in zip(params, zs, delta_zs):
-            z.data.mul_(momentum).add_(-lr, dz)
-            p.data.add_(z)  
+    lr = group['lr']
+    momentum = group['momentum']
+
+    # autoparams
+    # compute J^T * delta_zs
+    (Jdeltaz,) = self.fmad(predictions, params, delta_zs)  # equivalent but slower
+
+    # project result by loss hessian (using 2nd-order gradients)
+    (Hl_Jdeltaz,) = grad(Jl, predictions, grad_outputs=Jdeltaz)
+
+    # solve 2x2 linear system: [rho, -beta]^T = [a11, a12; a12, a22]^-1 [b1, b2]^T.
+    # accumulate components of dot-product from all parameters, by first aggregating them into a vector.
+    z_vec = torch.cat([z.flatten() for z in zs])
+    dz_vec = torch.cat([dz.flatten() for dz in delta_zs])
+
+    a11 = lambd * (dz_vec * dz_vec).sum() + (Jdeltaz * Hl_Jdeltaz).sum()
+    a12 = lambd * (dz_vec * z_vec).sum() + (Jz * Hl_Jdeltaz).sum()
+    a22 = lambd * (z_vec * z_vec).sum() + (Jz * Hl_Jz).sum()
+
+    b1 = (Jl_d * Jdeltaz).sum()
+    b2 = (Jl_d * Jz).sum()
+
+    # item() implicitly moves to the CPU
+    A = torch.tensor([[a11.item(), a12.item()], [a12.item(), a22.item()]])
+    b = torch.tensor([[b1.item()], [b2.item()]])
+    auto_params = A.pinverse() @ b
+
+    lr = auto_params[0].item()
+    momentum = -auto_params[1].item()
+
+
+    for (p, z, dz) in zip(params, zs, delta_zs):
+        z.data.mul_(momentum).add_(-lr, dz)  # update state
+        p.data.add_(z)  # update parameter
 
     predictions = model_predict()
     loss = loss_func(predictions)
