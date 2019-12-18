@@ -7,7 +7,7 @@ from .train import train
 from torch import nn
 from torch.nn import functional as F
 
-def fit_model(config):
+def fit_model(config, use_gpu=True):
     config = get_config(config)
     train_loader, test_loader = get_dataset(config['dataset'])
     model = get_model(config['model'])
@@ -17,7 +17,7 @@ def fit_model(config):
     
     print('-'*20)
     print(config['optimizer']['name'])
-    stats = train(model, train_loader, optim, criterion, metrics, config['optimizer']['num_epochs'])
+    stats = train(model, train_loader, optim, criterion, metrics, config['optimizer']['num_epochs'], use_gpu=use_gpu)
     
     return (config['optimizer']['name'], stats)
 
