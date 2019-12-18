@@ -7,7 +7,7 @@ model:
     name: mlp
 
 optimizer:
-    name: Curveball
+    name: SimplifiedHessian
     lr: 0.1
-    momentum: 0.1
+    momentum: 0.99
     lambd: 0.1

@@ -1,15 +1,16 @@
-
 import torch
-from torch.optim.optimizer import Optimizer, required
 from torch.autograd import grad
-import numpy as np
-from torch_cg import CG
+from torch.nn.utils.convert_parameters import vector_to_parameters, parameters_to_vector
+from torch.optim.optimizer import Optimizer
+
+from befree.utils.cg import CG
+
 
 class SimplifiedHessian(Optimizer):
 
-    def __init__(self, params, lr=1):
+    def __init__(self, params, lr=None, momentum=None, lambd=10.0):
 
-        defaults = dict(lr=lr)
+        defaults = dict(lr=lr, momentum=momentum, lambd=lambd)
         super().__init__(params, defaults)
 
     def fmad(self, predictions, parameters, zs):
@@ -25,7 +26,9 @@ class SimplifiedHessian(Optimizer):
 
         group = self.param_groups[0]
         params = group['params']
-        lr = group["lr"]
+        # lr = group["lr"]
+        # momentum = group["momentum"]
+        # lambd = group["lambd"]
         state = self.state
         for p in params:
             if p not in state:
@@ -34,37 +37,35 @@ class SimplifiedHessian(Optimizer):
         predictions = model_predict()
         loss = loss_func(predictions)
 
-        zs = [state[p]['z'] for p in params]
-        (Jz,) = self.fmad(predictions, params, zs)
-
         (Jl,) = grad(loss, predictions, create_graph=True)
         Jl_d = Jl.detach()
-        z0 = -Jl
-
-        # (Hl) = grad(Jl, predictions, retain_graph=True)
-        # delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)
+        Jl_reshaped = Jl.unsqueeze(0).unsqueeze(0)
+        z0 = Jl_d.unsqueeze(0).unsqueeze(0).neg()
         R = 10
+
         def A_bmm(x):
-            (Hl, ) = grad(Jl, predictions, grad_outputs=x[0,0], retain_graph=True)
-            return Hl.unsqueeze(0).unsqueeze(0)
+            (Hl_Jz,) = grad(Jl, predictions, grad_outputs=x[0, 0], retain_graph=True)
+            return Hl_Jz.unsqueeze(0).unsqueeze(0)
 
         for i in range(R):
-            # (Jz,) = self.fmad(predictions, params, z0)
-            print(Jl)
-            cg = CG(A_bmm)
-            z0 = cg(Jl.unsqueeze(0).unsqueeze(0))
-        print(z0)
-        z0 = z0[0,0]
-        with torch.no_grad():
-            for (p, z) in zip(params, z0):
-                p.data.add_(z)  # update parameter
+            cg = CG(A_bmm, maxiter=len(predictions) * 2, verbose=False)
+            z0 = cg(Jl_reshaped.neg(), z0)
+            residual = grad(Jl, predictions, grad_outputs=z0[0, 0], retain_graph=True)[0] + Jl
+            if torch.norm(residual) > 1e2:
+                z0 = torch.zeros_like(Jl_reshaped)
 
+        print('residiual:', grad(Jl, predictions, grad_outputs=z0[0, 0], retain_graph=True)[0] + Jl)
+        print('----------------------')
+        z0 = z0[0, 0]
+
+        flat_params = parameters_to_vector(params)
+        vector_to_parameters(flat_params + z0, params)
         predictions = model_predict()
         loss = loss_func(predictions)
         return loss.item()
 
 
 def get_simplified_hessian(params, config):
-    newton_params = ['lr']
-    newton_params = {p: config[p] for p in newton_params if p in config}
-    return SimplifiedHessian(params, **newton_params)
+    simpl_params = ["lr", "momentum", "lambd"]
+    simpl_params = {p: config[p] for p in simpl_params if p in config}
+    return SimplifiedHessian(params, **simpl_params)
