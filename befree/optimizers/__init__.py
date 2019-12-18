@@ -2,7 +2,8 @@ from .basic_optim import *
 from .newton_optim import *
 from .simplified_optim import *
 from .curveball_optim import *
-optimizer_name = ['Adam', 'SGD', 'Momentum', 'Newton', 'Curveball', 'SimplifiedHessian']
+from .hessian_free_optim import *
+optimizer_name = ['Adam', 'SGD', 'Momentum', 'Newton', 'Curveball', 'SimplifiedHessian', 'HessianFree']
 
 def get_optimizer(params, config):
     
@@ -18,3 +19,5 @@ def get_optimizer(params, config):
         return get_newton(params, config)
     elif config['name'] == 'SimplifiedHessian':
         return get_simplified_hessian(params, config)
+    elif config['name'] == 'HessianFree':
+        return get_hessian_free_optim(params, config)

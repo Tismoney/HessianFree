@@ -7,7 +7,7 @@ model:
     name: mlp
 
 optimizer:
-    name: SimplifiedHessian
-    lr: 0.1
+    name: HessianFree
+    lr: 1
     momentum: 0.99
     lambd: 0.1
