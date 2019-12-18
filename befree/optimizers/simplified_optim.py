@@ -62,7 +62,7 @@ class SimplifiedHessian(Optimizer):
         vector_to_parameters(flat_params + z0, params)
         predictions = model_predict()
         loss = loss_func(predictions)
-        return loss.item()
+        return loss, predictions
 
 
 def get_simplified_hessian(params, config):
