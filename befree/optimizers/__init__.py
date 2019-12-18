@@ -1,5 +1,6 @@
 from .basic_optim import *
 from .newton_optim import *
+
 from .simplified_optim import *
 from .curveball_optim import *
 from .hessian_free_optim import *
@@ -21,3 +22,7 @@ def get_optimizer(params, config):
         return get_simplified_hessian(params, config)
     elif config['name'] == 'HessianFree':
         return get_hessian_free_optim(params, config)
+    elif config['name'] == 'LBFGS':
+        return get_lbfgs(params, config)
+    elif config['name'] == 'CurveBall':
+        return get_curve_ball(params, config)
