@@ -64,7 +64,7 @@ class HessianFree(torch.optim.Optimizer):
             views.append(view)
         return torch.cat(views, 0)
 
-    def step(self, model_func, loss_func, b=None, M_inv=None):
+    def step(self, closure, b=None, M_inv=None):
         """
         Performs a single optimization step.
         Arguments:
@@ -88,9 +88,7 @@ class HessianFree(torch.optim.Optimizer):
         state.setdefault('func_evals', 0)
         state.setdefault('n_iter', 0)
 
-        output = model_func()
-        loss_before = loss_func(output)
-        loss_before.backward(create_graph=True)
+        loss_before, output = closure()
         current_evals = 1
         state['func_evals'] += 1
 
@@ -145,9 +143,7 @@ class HessianFree(torch.optim.Optimizer):
         M = Ms[-1]
 
         vector_to_parameters(flat_params + delta, self._params)
-        output = model_func()
-        loss_now = loss_func(output)
-        loss_now.backward(create_graph=True)
+        loss_now = closure()[0]
         current_evals += 1
         state['func_evals'] += 1
 
@@ -158,9 +154,7 @@ class HessianFree(torch.optim.Optimizer):
 
         for (d, m) in zip(reversed(deltas[:-1][::2]), reversed(Ms[:-1][::2])):
             vector_to_parameters(flat_params + d, self._params)
-            output = model_func()
-            loss_prev = loss_func(output)
-            loss_prev.backward(create_graph=True)
+            loss_prev = closure()[0]
             if float(loss_prev) > float(loss_now):
                 break
             delta = d
@@ -196,9 +190,7 @@ class HessianFree(torch.optim.Optimizer):
 
             alpha *= beta
             vector_to_parameters(flat_params + alpha * delta, self._params)
-            output = model_func()
-            loss_now = loss_func(output)
-            loss_now.backward(create_graph=True)
+            loss_now = closure()[0]
         else:  # No good update found
             alpha = 0.0
             loss_now = loss_before
@@ -210,7 +202,7 @@ class HessianFree(torch.optim.Optimizer):
             print("Final loss: {}".format(float(loss_now)))
             print("Lr: {}".format(alpha), end='\n\n')
 
-        return loss_now, output
+        return loss_now
 
     def _CG(self, A, b, x0, M=None, max_iter=50, tol=1.2e-6, eps=1.2e-7,
             martens=False):
@@ -350,6 +342,6 @@ def empirical_fisher_matrix(net, xs, ys, criterion):
 
 
 def get_hessian_free_optim(params, config):
-    hessian_free_params = ["lr", "use_gnm"]
+    hessian_free_params = ['lr', 'use_gnm', 'damping', 'delta_decay', 'cg_max_iter']
     hessian_free_params = {p: config[p] for p in hessian_free_params if p in config}
     return HessianFree(params, **hessian_free_params)

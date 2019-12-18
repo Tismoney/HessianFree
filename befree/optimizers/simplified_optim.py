@@ -11,7 +11,7 @@ class SimplifiedHessian(Optimizer):
     def __init__(self, params, lr=None, momentum=None, lambd=10.0):
 
         defaults = dict(lr=lr, momentum=momentum, lambd=lambd)
-        super().__init__(params, defaults)
+        super(SimplifiedHessian, self).__init__(params, defaults)
 
     def fmad(self, predictions, parameters, zs):
         v = torch.zeros_like(predictions, requires_grad=True)
@@ -36,29 +36,32 @@ class SimplifiedHessian(Optimizer):
 
         predictions = model_predict()
         loss = loss_func(predictions)
+        flat_params = parameters_to_vector(params)
 
-        (Jl,) = grad(loss, predictions, create_graph=True)
-        Jl_d = Jl.detach()
-        Jl_reshaped = Jl.reshape(1, 1, -1)
-        z0 = Jl_d.reshape(1, 1, -1).neg()
+        J = grad(loss, params, create_graph=True)
+        J = parameters_to_vector(J)
+        J_d = J.detach()
+        J_reshaped = J.reshape(1, 1, -1)
+        
+        z0 = J_d.reshape(1, 1, -1).neg()
         R = 10
 
         def A_bmm(x):
-            (Hl_Jz,) = grad(Jl, predictions, grad_outputs=x[0, 0], retain_graph=True)
-            return Hl_Jz.reshape(1, 1, -1)
+            x_ = x.view_as(J)
+            (Hl_Jz,) = grad(J, predictions, grad_outputs=x_, retain_graph=True)
+            delta_zs = grad(predictions, params, grad_outputs=Hl_Jz, retain_graph=True)  
+            return parameters_to_vector(delta_zs)
 
         for i in range(R):
-            cg = CG(A_bmm, maxiter=len(predictions) * 2, verbose=False)
-            z0 = cg(Jl_reshaped.neg(), z0)
-            residual = grad(Jl, predictions, grad_outputs=z0[0, 0], retain_graph=True)[0] + Jl
-            if torch.norm(residual) > 1e2:
-                z0 = torch.zeros_like(Jl_reshaped)
+            cg = CG(A_bmm, maxiter=len(flat_params) * 2, verbose=False)
+            z0 = cg(J_reshaped.neg(), z0)
+            residual = A_bmm(z0) + J
+            print('residual norm: ', torch.norm(residual))
+            if torch.norm(residual) > 1e2 and i != R - 1:
+                z0 = torch.zeros_like(J_reshaped)
 
-        print('residiual:', grad(Jl, predictions, grad_outputs=z0[0, 0], retain_graph=True)[0] + Jl)
-        print('----------------------')
+        print('residual norm: ', torch.norm(residual))
         z0 = z0[0, 0]
-
-        flat_params = parameters_to_vector(params)
         vector_to_parameters(flat_params + z0, params)
         predictions = model_predict()
         loss = loss_func(predictions)
