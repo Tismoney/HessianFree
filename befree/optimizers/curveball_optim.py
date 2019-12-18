@@ -39,10 +39,7 @@ class CurveBall(Optimizer):
     (Jl,) = grad(loss, predictions, create_graph=True)
     Jl_d = Jl.detach()
     (Hl_Jz,) = grad(Jl, predictions, grad_outputs=Jz, retain_graph=True)
-    delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)    
-
-    lr = group['lr']
-    momentum = group['momentum']
+    delta_zs = grad(predictions, params, grad_outputs=(Hl_Jz + Jl_d), retain_graph=True)
 
     # autoparams
     # compute J^T * delta_zs
@@ -71,6 +68,8 @@ class CurveBall(Optimizer):
     lr = auto_params[0].item()
     momentum = -auto_params[1].item()
 
+    for (z, dz) in zip(zs, delta_zs):
+        dz.data.add_(lambd, z)
 
     for (p, z, dz) in zip(params, zs, delta_zs):
         z.data.mul_(momentum).add_(-lr, dz)  # update state
