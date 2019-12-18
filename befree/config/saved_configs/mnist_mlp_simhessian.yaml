@@ -1,0 +1,18 @@
+dataset:
+    name: mnist
+    batch_size: 16
+
+model:
+    name: mlp
+    fc: [784, 800, 10]
+    num_epochs: 5
+
+optimizer:
+    num_epochs: 1
+    name: SimplifiedHessian
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]
