@@ -39,13 +39,13 @@ class SimplifiedHessian(Optimizer):
 
         (Jl,) = grad(loss, predictions, create_graph=True)
         Jl_d = Jl.detach()
-        Jl_reshaped = Jl.unsqueeze(0).unsqueeze(0)
-        z0 = Jl_d.unsqueeze(0).unsqueeze(0).neg()
+        Jl_reshaped = Jl.reshape(1, 1, -1)
+        z0 = Jl_d.reshape(1, 1, -1).neg()
         R = 10
 
         def A_bmm(x):
             (Hl_Jz,) = grad(Jl, predictions, grad_outputs=x[0, 0], retain_graph=True)
-            return Hl_Jz.unsqueeze(0).unsqueeze(0)
+            return Hl_Jz.reshape(1, 1, -1)
 
         for i in range(R):
             cg = CG(A_bmm, maxiter=len(predictions) * 2, verbose=False)
