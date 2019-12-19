@@ -31,7 +31,8 @@ def test(model, test_loader, criterion, metrics, use_gpu=True):
 
 
 def train(model, train_loader, test_loader, optimizer,
-          criterion, metrics, epoch, use_gpu=True, print_test_epoch=50):
+          criterion, metrics, epoch, use_gpu=True,
+          print_test_epoch=50, save_test=True):
     '''
         Params:
             model: pytorch model
@@ -44,9 +45,11 @@ def train(model, train_loader, test_loader, optimizer,
     model.train()
     if use_gpu and torch.cuda.is_available():
         model = model.cuda()
-    stats = {key: [] for key in ['train.loss', 'test.loss'] +
-                                ['train.' + k for k in metrics.keys()] + 
-                                ['test.' + k for k in metrics.keys()]}
+    keys = ['train.loss'] + ['train.' + k for k in metrics.keys()]
+    if save_test:
+        keys += ['test.loss'] + ['test.' + k for k in metrics.keys()]
+    stats = {key: [] for key in keys}
+    times_per_iter = []
     num_iter = 0
     for epoch_i in range(1, epoch + 1):
         start = time()
@@ -54,6 +57,7 @@ def train(model, train_loader, test_loader, optimizer,
             num_iter += 1
             if use_gpu and torch.cuda.is_available():           
                 inputs, targets = inputs.cuda(), targets.cuda()
+            start_iter_time = time()
             # inputs.requires_grad = True
             if isinstance(optimizer, CurveBall) or isinstance(optimizer, SimplifiedHessian):
                 model_fn = lambda: model(inputs)
@@ -85,17 +89,21 @@ def train(model, train_loader, test_loader, optimizer,
                 loss = criterion(predictions, targets)
                 loss.backward()
                 optimizer.step()
-
+            
+            end_iter_time = time()
+            
+            times_per_iter.append(end_iter_time - start_iter_time)
             stats['train.loss'].append(loss.item())
             with torch.no_grad(): 
                 for name, func in metrics.items():
                     res = func(predictions, targets)
                     stats['train.' + name].append(res.item())
             
-            if num_iter % print_test_epoch == 0:
-                test_stats = test(model, test_loader, criterion, metrics, use_gpu=use_gpu)
-                for key, val in test_stats.items():
-                    stats[key].append(val)
+            if save_test:
+                if num_iter % print_test_epoch == 0:
+                    test_stats = test(model, test_loader, criterion, metrics, use_gpu=use_gpu)
+                    for key, val in test_stats.items():
+                        stats[key].append(val)
             
 
         print_stat = f"[{epoch_i}/{epoch}] epoch "
@@ -106,4 +114,4 @@ def train(model, train_loader, test_loader, optimizer,
         end = time()
         print_stat += f"time: {end - start:.2f}s"
         print(print_stat)
-    return stats
+    return stats, times_per_iter

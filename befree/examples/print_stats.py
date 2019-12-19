@@ -4,12 +4,12 @@ from itertools import chain
 
 def print_stats(named_stats, step = 50, figsize=(16, 4)):
 
-#     stat_names = list(set(chain(*[set(st.keys()) for st in named_stats.values()])))
-    stat_names = ['train.loss', 'train.accuracy', 'test.loss', 'test.accuracy']
+    stat_names = list(set(chain(*[set(st.keys()) for st in named_stats.values()])))
+#     stat_names = ['train.loss', 'train.accuracy', 'test.loss', 'test.accuracy']
     assert len(stat_names) >= 1
     _, ax = plt.subplots(len(stat_names) // 2, 2, figsize=figsize)
-    if len(stat_names) == 1:
-        ax = [ax]
+    if len(stat_names) // 2 == 1:
+        ax = np.array([ax])
 
     for name, stats in named_stats.items():
         

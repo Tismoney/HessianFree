@@ -7,7 +7,9 @@ from .train import train
 from torch import nn
 from torch.nn import functional as F
 
-def fit_model(config, use_gpu=True, print_model=False):
+import numpy as np
+
+def fit_model(config, use_gpu=True, print_model=False, print_test_epoch=50, save_test=True):
     config = get_config(config)
     train_loader, test_loader = get_dataset(config['dataset'])
     model = get_model(config['model'])
@@ -19,10 +21,12 @@ def fit_model(config, use_gpu=True, print_model=False):
     print('-'*20)
     print(config['optimizer']['name'])
     if print_model: print(model)
-    stats = train(model, train_loader, test_loader,
+    stats, times_per_iter = train(model, train_loader, test_loader,
                   optim, criterion, metrics,
-                  config['optimizer']['num_epochs'], use_gpu=use_gpu)
+                  config['optimizer']['num_epochs'], use_gpu=use_gpu,
+                  print_test_epoch = print_test_epoch, save_test=save_test)
     
+    print(f'Times per iter {np.mean(times_per_iter) * 1e3 :.3f} ms ± {np.std(times_per_iter) * 1e6 :.3f} µs')
     return (config['optimizer']['name'], stats)
 
 
