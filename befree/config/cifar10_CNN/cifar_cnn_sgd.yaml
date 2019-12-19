@@ -1,0 +1,19 @@
+dataset:
+    name: cifar10
+    batch_size: 128
+
+model:
+    name: cnn
+    cnn: [32, M , 32, A, 64, A]
+    fc: [1024, 64, 10]
+
+optimizer:
+    num_epochs: 10
+    name: SGD
+    lr: 0.1
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]

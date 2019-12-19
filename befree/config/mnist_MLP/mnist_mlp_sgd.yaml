@@ -1,0 +1,18 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: mlp
+    fc: [784, 128, 64, 32, 10]
+
+optimizer:
+    num_epochs: 10
+    name: SGD
+    lr: 0.1
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]

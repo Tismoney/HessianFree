@@ -1,0 +1,20 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: mlp
+    fc: [784, 128, 64, 32, 10]
+
+optimizer:
+    num_epochs: 10
+    name: Curveball
+    lr: 0.01
+    momentum: 0.9
+    lambd: 1
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]

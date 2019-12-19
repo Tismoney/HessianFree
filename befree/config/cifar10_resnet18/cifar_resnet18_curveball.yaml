@@ -1,0 +1,20 @@
+dataset:
+    name: cifar10
+    batch_size: 128
+
+model:
+    name: resnet18
+    num_classes: 10
+
+optimizer:
+    num_epochs: 20
+    name: Curveball
+    lr: 0.01
+    momentum: 0.9
+    lambd: 1
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]

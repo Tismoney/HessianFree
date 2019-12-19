@@ -1,0 +1,19 @@
+dataset:
+    name: mnist
+    batch_size: 128
+
+model:
+    name: mlp
+    fc: [784, 128, 64, 32, 10]
+    batch_norm: True
+
+optimizer:
+    num_epochs: 10
+    name: Adam
+    lr: 0.001
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]
