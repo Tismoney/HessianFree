@@ -7,7 +7,7 @@ model:
     num_classes: 10
 
 optimizer:
-    num_epochs: 20
+    num_epochs: 10
     name: SGD
     lr: 0.01
 
