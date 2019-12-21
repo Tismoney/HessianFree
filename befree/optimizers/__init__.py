@@ -24,5 +24,5 @@ def get_optimizer(params, config):
         return get_hessian_free_optim(params, config)
     elif config['name'] == 'LBFGS':
         return get_lbfgs(params, config)
-    elif config['name'] == 'CurveBall':
+    elif config['name'] == 'Curveball':
         return get_curve_ball(params, config)

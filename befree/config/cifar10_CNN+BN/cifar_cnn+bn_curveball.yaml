@@ -1,0 +1,22 @@
+dataset:
+    name: cifar10
+    batch_size: 128
+
+model:
+    name: cnn
+    cnn: [32, M , 32, A, 64, A]
+    fc: [1024, 64, 10]
+    batch_norm: True
+
+optimizer:
+    num_epochs: 10
+    name: Curveball
+    lr: 0.01
+    momentum: 0.9
+    lambd: 1
+
+loss:
+    name: CrossEntropy
+
+metrics:
+    names: [accuracy]

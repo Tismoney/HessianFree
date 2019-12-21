@@ -11,9 +11,9 @@ def get_model(config):
     elif config['name'] == 'vgg16':
         return get_vgg16(config)
     elif config['name'] == 'mlp':
-        return get_mlp(config)
+        return get_net(config)
     elif config['name'] == 'cnn':
-        return get_cnn(config)
+        return get_net(config)
 
     
     
