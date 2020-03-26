@@ -19,3 +19,7 @@ stats = dict([fit_model(config) for config in configs])
 
 print_stats(stats)
 ```
+
+## Paper
+
+See our technical report [here](https://drive.google.com/open?id=1qy2nMyWZ8EowgGG99iJHhauXqjlauiIr).
