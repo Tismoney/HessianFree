@@ -5,7 +5,7 @@ Code of the project "On the New method of Hessian-free second-order optimization
 Made initially as a project for Skoltech course "Numerical Linear Algebra 2019"
 
 
-## Quick quide
+## Quick guide
 
 ```python
 from befree.examples.utils import fit_model
